@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Website</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="chat-container" id="chat-container">
+      <div class="chat-header">
+        UniBot
+
+        <button class="toggle-btn" onclick="toggleChat()">-</button>
+      </div>
+      <div class="chat-log" id="chat-log">
+        <div
+          id="typing-indicator"
+          class="typing-indicator"
+          style="display: none"
+        >
+          <span>...</span>
+        </div>
+      </div>
+      <div class="input-container">
+        <input
+          type="text"
+          id="user-input"
+          placeholder="Ask your queries here..."
+        />
+        <button onclick="sendMessage()" class="send-btn">
+          <img src="imgs/msg_send.png" class="msg-send" />
+        </button>
+      </div>
+    </div>
+
+    <script>
+     
+
+      function toggleChat() {
+        const chatContainer = document.getElementById("chat-container");
+        const minimized = chatContainer.classList.toggle("minimized");
+
+        if (minimized) {
+          chatContainer.querySelector(".chat-log").style.display = "none";
+          chatContainer.querySelector(".input-container").style.display =
+            "none";
+        } else {
+          chatContainer.querySelector(".chat-log").style.display = "flex";
+          chatContainer.querySelector(".input-container").style.display =
+            "flex";
+        }
+      }
+
+      function toggleChat() {
+        const chatContainer = document.getElementById("chat-container");
+        const minimized = chatContainer.classList.toggle("minimized");
+
+        if (minimized) {
+          chatContainer.querySelector(".chat-log").style.display = "none";
+          chatContainer.querySelector(".input-container").style.display =
+            "none";
+        } else {
+          chatContainer.querySelector(".chat-log").style.display = "flex";
+          chatContainer.querySelector(".input-container").style.display =
+            "flex";
+        }
+      }
+
+      async function sendMessage() {
+        const userInput = document.getElementById("user-input").value;
+        if (!userInput) return;
+
+        // Append user message
+        appendMessage("user-message", userInput);
+        document.getElementById("user-input").value = "";
+
+        // Show typing indicator
+        appendTypingIndicator();
+
+        try {
+          const response = await fetch("http://localhost:3000/chat", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ message: userInput }),
+          });
+
+          const data = await response.json();
+
+          // Remove typing indicator and show response
+          removeTypingIndicator();
+          showFullResponse(data.message);
+        } catch (error) {
+          console.error("Error:", error);
+          // Remove typing indicator
+          removeTypingIndicator();
+          // Display error message
+          appendMessage("bot-message", "An error occurred. Please try again.");
+        }
+      }
+
+      function appendTypingIndicator() {
+        const chatLog = document.getElementById("chat-log");
+        const typingIndicator = document.createElement("div");
+        typingIndicator.className = "chat-message bot-message typing-indicator";
+        typingIndicator.innerHTML =
+          '<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>';
+        chatLog.appendChild(typingIndicator);
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
+
+      function removeTypingIndicator() {
+        const typingIndicator = document.querySelector(
+          ".chat-message.typing-indicator"
+        );
+        if (typingIndicator) {
+          typingIndicator.remove();
+        }
+      }
+
+      function showFullResponse(message) {
+        const chatLog = document.getElementById("chat-log");
+        const botMessageElement = document.createElement("div");
+        botMessageElement.className = "chat-message bot-message";
+        botMessageElement.textContent = message;
+        chatLog.appendChild(botMessageElement);
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
+
+      function appendMessage(className, message) {
+        const chatLog = document.getElementById("chat-log");
+        const messageElement = document.createElement("div");
+        messageElement.className = `chat-message ${className}`;
+        messageElement.textContent = message;
+        chatLog.appendChild(messageElement);
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
+
+      document
+        .getElementById("user-input")
+        .addEventListener("keypress", function (event) {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            sendMessage();
+          }
+        });
+    </script>
+  </body>
+</html>
